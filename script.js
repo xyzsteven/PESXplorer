@@ -382,9 +382,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateFilters() {
-        // [PERUBAHAN] Filter tim-tim yang tidak diinginkan dari dropdown
         const teams = [...new Set(allPlayers.map(p => p.team_name || 'Free Agent'))]
             .filter(team => !ALWAYS_EXCLUDE_TEAMS.includes(team))
+            .filter(team => team.toUpperCase() !== 'FREE AGENT') // <-- TAMBAHKAN BARIS INI
             .sort();
             
         const countries = [...new Set(allPlayers.map(p => p.country_name).filter(Boolean))].sort(); 
