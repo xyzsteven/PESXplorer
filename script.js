@@ -190,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentSort = { key: 'overall_rating', direction: 'desc' };
         updateSortVisuals();
 
-        // 5. Render tabel
         renderPlayers();
     }
     
@@ -384,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateFilters() {
         const teams = [...new Set(allPlayers.map(p => p.team_name || 'Free Agent'))]
             .filter(team => !ALWAYS_EXCLUDE_TEAMS.includes(team))
-            .filter(team => team.toUpperCase() !== 'FREE AGENT') // <-- TAMBAHKAN BARIS INI
+            .filter(team => team.toUpperCase() !== 'FREE AGENT')
             .sort();
             
         const countries = [...new Set(allPlayers.map(p => p.country_name).filter(Boolean))].sort(); 
