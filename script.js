@@ -5,6 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedPlayerForComparison = null;
     let playerToCompare = null;
 
+    function normalizeString(str) {
+    if (!str) return "";
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    }
+
     const filterForm = document.getElementById('filterForm');
     const playerList = document.getElementById('playerList');
     const generalPositionFilter = document.getElementById('generalPositionFilter');
@@ -139,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeModal() { document.getElementById('playerModal').classList.add('hidden'); }
     function closeCmpModal() { document.getElementById('comparisonModal').classList.add('hidden'); }
     function executeSearch() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+        const searchTerm = normalizeString(document.getElementById('searchInput').value);
         const team = teamFilter.value;
         const country = countryFilter.value;
         const generalPos = generalPositionFilter.value;
@@ -161,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return false;
             }
 
-            const nameMatch = searchTerm === '' || player.player_name.toLowerCase().includes(searchTerm);
+            const nameMatch = searchTerm === '' || normalizeString(player.player_name).includes(searchTerm);
             const teamMatch = team === '' || teamName === team;
             const countryMatch = country === '' || player.country_name === country;
             const ovrMatch = player.overall_rating >= minOvr && player.overall_rating <= maxOvr;
