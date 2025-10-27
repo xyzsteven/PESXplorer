@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const skillKeys = [ "trickster", "mazing_run", "speeding_bullet", "incisive_run", "long_ball_expert", "early_cross", "long_ranger", "scissors_feint", "double_touch", "flip_flap", "marseille_turn", "sombrero", "cross_over_turn", "cut_behind_and_turn", "scotch_move", "step_on_skill_control", "heading_special", "long_range_drive", "chip_shot_control", "long_range_shot", "knuckle_shot", "dipping_shots", "rising_shots", "acrobatic_finishing", "heel_trick", "first_time_shot", "one_touch_pass", "through_passing", "weighted_pass", "pinpoint_crossing", "outside_curler", "rabona", "no_look_pass", "low_lofted_pass", "gk_low_punt", "gk_high_punt", "long_throw", "gk_long_throw", "penalty_specialist", "gk_penalty_saver", "gamesmanship", "man_marking", "track_back", "interception", "acrobatic_clear", "captaincy", "super_sub", "fighting_spirit" ];
     const generalPositionMap = { 'GK': ['GK'], 'DF': ['CB', 'LB', 'RB'], 'MF': ['DMF', 'CMF', 'LMF', 'RMF', 'AMF'], 'FW': ['LWF', 'RWF', 'SS', 'CF'] };
 
-    const ALWAYS_EXCLUDE_TEAMS = ['FREE AGENT', 'ML DEFAULT ASIA', 'ML DEFAULT EUROPE', 'ML DEFAULT LATINAMERICA'];
+    const ALWAYS_EXCLUDE_TEAMS = ['PES UNITED', 'FREE AGENT', 'ML DEFAULT ASIA', 'ML DEFAULT EUROPE', 'ML DEFAULT LATINAMERICA'];
     const EXCLUDE_ON_DEFAULT_TEAMS = [
         'AC MILAN 88-89', 'AFC AJAX 71-72', 'ARSENAL FC 03-04', 'ATLÉTICO DE MADRID 95-96',
         'BORUSSIA DORTMUND 96-97', 'CA BOCA JUNIORS 00-01', 'EUROPEAN CLASSICS', 'FC BARCELONA 91-92',
