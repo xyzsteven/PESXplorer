@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeCmpModal() { document.getElementById('comparisonModal').classList.add('hidden'); }
     function executeSearch() {
         const rawSearchInput = normalizeString(document.getElementById('searchInput').value);
-        const searchTerm = rawSearchInput.split(/\s+/).filter(term => term.length > 0);
+        const searchTerm = rawSearchInput.split(/[\s,]+/).filter(term => term.length > 0);
         const team = teamFilter.value;
         const country = countryFilter.value;
         const generalPos = generalPositionFilter.value;
