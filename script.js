@@ -20,6 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const teamFilter = document.getElementById('teamFilter');
     const countryFilter = document.getElementById('countryFilter');
 
+    const minOvrInput = document.getElementById('minOvr');
+    const maxOvrInput = document.getElementById('maxOvr');
+    const resetAllFilters = document.getElementById('resetAllFilters');
+
+    const advancedSearchBtn = document.getElementById('advancedSearchBtn');
+    const advancedSearchModal = document.getElementById('advancedSearchModal');
+    const closeAdvancedSearchModal = document.getElementById('closeAdvancedSearchModal');
+    const advancedSearchForm = document.getElementById('advancedSearchForm');
+    const resetAdvancedFiltersBtn = document.getElementById('resetAdvancedFiltersBtn');
+    const applyAdvancedFiltersBtn = document.getElementById('applyAdvancedFiltersBtn');
+
     const positionKeys = ['gk', 'cb', 'lb', 'rb', 'dmf', 'cmf', 'lmf', 'rmf', 'amf', 'lwf', 'rwf', 'ss', 'cf'];
     const positionColorMap = { 0: 'bg-gray-700 text-gray-400', 1: 'bg-green-800 text-green-200', 2: 'bg-green-500 text-white' };
     const positionOrderMap = { 'GK': 1, 'CB': 2, 'LB': 3, 'RB': 4, 'DMF': 5, 'CMF': 6, 'LMF': 7, 'RMF': 8, 'AMF': 9, 'LWF': 10, 'RWF': 11, 'SS': 12, 'CF': 13 };
@@ -528,10 +539,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (detailsButton) { detailsButton.style.opacity = '0'; detailsButton.style.pointerEvents = 'none'; }
         });
         
-        filterForm.addEventListener('submit', (e) => { e.preventDefault(); executeSearch(); });
+        filterForm.addEventListener('submit', (e) => { e.preventDefault(); filterAndRenderPlayers(); });
         
         document.getElementById('resetAllFilters').addEventListener('click', () => {
             filterForm.reset();
+            advancedSearchForm.reset();
             document.getElementById('minOvr').value = '';
             document.getElementById('maxOvr').value = '';
             generalPositionFilter.value = '';
@@ -552,11 +564,36 @@ document.addEventListener('DOMContentLoaded', () => {
             if (button) switchCmpTab(button.dataset.tab);
         });
 
+        advancedSearchBtn.addEventListener('click', () => {
+            advancedSearchModal.classList.remove('hidden');
+        });
+
+        closeAdvancedSearchModal.addEventListener('click', () => {
+            advancedSearchModal.classList.add('hidden');
+        });
+
+        advancedSearchModal.addEventListener('click', (e) => {
+            if (e.target.id === 'advancedSearchModal') {
+                advancedSearchModal.classList.add('hidden');
+            }
+        });
+
+        applyAdvancedFiltersBtn.addEventListener('click', () => {
+            filterAndRenderPlayers();
+            advancedSearchModal.classList.add('hidden');
+        });
+
+        resetAdvancedFiltersBtn.addEventListener('click', () => {
+            advancedSearchForm.reset();
+        });
+
         startFlickerAnimation();
 
         await loadData();
+
+        populateAdvancedFilters();
         
-        executeSearch();
+        filterAndRenderPlayers();
     }
     
     function startFlickerAnimation() {
@@ -581,6 +618,181 @@ document.addEventListener('DOMContentLoaded', () => {
                 titleElement.textContent = originalText; 
             }, flickerDuration);
         }, flickerInterval);
+    }
+
+    function filterAndRenderPlayers() {
+        const search = normalizeString(document.getElementById('searchInput').value);
+        const generalPos = generalPositionFilter.value;
+        const specificPos = positionFilter.value;
+        const team = teamFilter.value;
+        const country = countryFilter.value;
+        
+        const minOvr = minOvrInput.value ? parseInt(minOvrInput.value) : 40;
+        const maxOvr = maxOvrInput.value ? parseInt(maxOvrInput.value) : 99;
+
+        const advancedFilters = new FormData(document.getElementById('advancedSearchForm'));
+        const height = advancedFilters.get('height') ? parseInt(advancedFilters.get('height')) : null;
+        const weight = advancedFilters.get('weight') ? parseInt(advancedFilters.get('weight')) : null;
+        const age = advancedFilters.get('age') ? parseInt(advancedFilters.get('age')) : null;
+        const foot = advancedFilters.get('foot');
+        const playingStyle = advancedFilters.get('playingStyle');
+        const playerSkill = advancedFilters.get('playerSkill'); 
+        const form = advancedFilters.get('form') ? parseInt(advancedFilters.get('form')) : null;
+        const injuryResistance = advancedFilters.get('injuryResistance') ? parseInt(advancedFilters.get('injuryResistance')) : null;
+        const weakFootUsage = advancedFilters.get('weakFootUsage') ? parseInt(advancedFilters.get('weakFootUsage')) : null;
+        const weakFootAccuracy = advancedFilters.get('weakFootAccuracy') ? parseInt(advancedFilters.get('weakFootAccuracy')) : null;
+        const sortByAbility = advancedFilters.get('ability'); 
+
+        const isDefaultSearch = search === '' && generalPos === '' && specificPos === '' &&
+                                team === '' && country === '' && minOvr === 40 && maxOvr === 99 &&
+                                !height && !weight && !age && !foot && !playingStyle && !playerSkill &&
+                                !form && !injuryResistance && !weakFootUsage && !weakFootAccuracy;
+
+        let filtered = allPlayers.filter(player => {
+            const teamName = player.team_name || 'Free Agent';
+            if (ALWAYS_EXCLUDE_TEAMS.includes(teamName)) {
+                return false;
+            }
+            if (isDefaultSearch && EXCLUDE_ON_DEFAULT_TEAMS.includes(teamName)) {
+                return false;
+            }
+
+            const normalizedPlayerName = normalizeString(player.player_name);
+            const nameMatch = search.length === 0 || search.split(/[\s,]+/).filter(term => term.length > 0).some(term => normalizedPlayerName.includes(term));
+            if (!nameMatch) return false;
+
+            if (team && player.team_name !== team) return false;
+            if (country && player.country_name !== country) return false;
+            if (player.overall_rating < minOvr || player.overall_rating > maxOvr) return false;
+            
+            if (specificPos && player.position_name !== specificPos) return false;
+            if (generalPos && !specificPos) {
+                const positionsInGeneral = generalPositionMap[generalPos] || [];
+                if (!positionsInGeneral.includes(player.position_name)) return false;
+            }
+            
+            if (height && player.height < height) return false;
+            if (weight && player.weight < weight) return false;
+            if (age && player.age < age) return false;
+            
+            if (foot === 'Left' && !(player.foot == 1 || String(player.foot).toUpperCase() === 'LEFT')) return false;
+            if (foot === 'Right' && !(player.foot == 0 || String(player.foot).toUpperCase() === 'RIGHT')) return false;
+
+            if (playingStyle && player.playing_style_id != playingStyle) return false;
+            
+            if (playerSkill && !player[playerSkill]) return false; 
+            
+            if (form && player.form < form) return false;
+            if (injuryResistance && player.injury_resistance < injuryResistance) return false;
+            if (weakFootUsage && player.weak_foot_usage < weakFootUsage) return false;
+            if (weakFootAccuracy && player.weak_foot_acc < weakFootAccuracy) return false;
+
+            return true;
+        });
+
+        if (sortByAbility) {
+            filtered.sort((a, b) => (b[sortByAbility] || 0) - (a[sortByAbility] || 0));
+            currentSort.key = null;
+            updateSortVisuals();
+
+        } else if (currentSort.key) {
+            filtered.sort((a, b) => {
+                let valA = a[currentSort.key];
+                let valB = b[currentSort.key];
+
+                if (currentSort.key === 'position_name') {
+                    valA = positionOrderMap[valA] || 99;
+                    valB = positionOrderMap[valB] || 99;
+                }
+
+                if (typeof valA === 'string') {
+                    return currentSort.direction === 'asc'
+                        ? valA.localeCompare(valB)
+                        : valB.localeCompare(valA);
+                } else {
+                    return currentSort.direction === 'asc'
+                        ? valA - valB
+                        : valB - valA;
+                }
+            });
+        } else {
+            filtered.sort((a, b) => (b.overall_rating || 0) - (a.overall_rating || 0));
+            currentSort = { key: 'overall_rating', direction: 'desc' };
+            updateSortVisuals();
+        }
+        
+        if (isDefaultSearch && filtered.length > 100) {
+            displayedPlayers = filtered.slice(0, 100);
+        } else if (!isDefaultSearch && filtered.length > 100) {
+            displayedPlayers = filtered.slice(0, 100);
+        } else {
+            displayedPlayers = filtered;
+        }
+        
+        renderPlayers();
+    }
+
+    function populateAdvancedFilters() {
+        const abilities = {
+            "Offensive Awareness": "offensive_awareness", "Ball Control": "ball_control",
+            "Dribbling": "dribbling", "Tight Possession": "tight_possession",
+            "Low Pass": "low_pass", "Lofted Pass": "lofted_pass",
+            "Finishing": "finishing", "Heading": "heading",
+            "Place Kicking": "place_kicking", "Curl": "curl",
+            "Speed": "speed", "Acceleration": "acceleration",
+            "Kicking Power": "kicking_power", "Jump": "jump",
+            "Physical Contact": "physical_contact", "Balance": "balance",
+            "Stamina": "stamina", "Height": "height", "Weight": "weight", "Age": "age",
+            "Defensive Awareness": "defensive_awareness", "Ball Winning": "ball_winning",
+            "Aggression": "aggression", "GK Awareness": "gk_awareness",
+            "GK Catching": "gk_catching", "GK Clearing": "gk_clearing",
+            "GK Reflexes": "gk_reflexes", "GK Reach": "gk_reach"
+        };
+
+        const playingStyles = [
+            "Goal Poacher", "Dummy Runner", "Fox in the Box", "Prolific Winger",
+            "Classic No. 10", "Hole Player", "Box-to-Box", "Anchor Man",
+            "The Destroyer", "Extra Frontman", "Offensive Full-back",
+            "Defensive Full-back", "Target Man", "Creative Playmaker", "Build Up",
+            "Offensive Goalkeeper", "Defensive Goalkeeper", "Roaming Flank",
+            "Cross Specialist", "Orchestrator", "Full-back Finisher"
+        ];
+        
+        const skillKeys = [ "trickster", "mazing_run", "speeding_bullet", "incisive_run", "long_ball_expert", "early_cross", "long_ranger", "scissors_feint", "double_touch", "flip_flap", "marseille_turn", "sombrero", "cross_over_turn", "cut_behind_and_turn", "scotch_move", "step_on_skill_control", "heading_special", "long_range_drive", "chip_shot_control", "long_range_shot", "knuckle_shot", "dipping_shots", "rising_shots", "acrobatic_finishing", "heel_trick", "first_time_shot", "one_touch_pass", "through_passing", "weighted_pass", "pinpoint_crossing", "outside_curler", "rabona", "no_look_pass", "low_lofted_pass", "gk_low_punt", "gk_high_punt", "long_throw", "gk_long_throw", "penalty_specialist", "gk_penalty_saver", "gamesmanship", "man_marking", "track_back", "interception", "acrobatic_clear", "captaincy", "super_sub", "fighting_spirit" ];
+
+        const abilitySelect = document.getElementById('ability');
+        const styleSelect = document.getElementById('playingStyle');
+        const skillSelect = document.getElementById('playerSkill');
+
+        for (const [name, value] of Object.entries(abilities)) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = name;
+            abilitySelect.appendChild(option);
+        }
+
+        playingStyles.forEach((style, index) => {
+            const option = document.createElement('option');
+            option.value = index + 1;
+            option.textContent = style;
+            styleSelect.appendChild(option);
+        });
+
+        const skillsForDropdown = skillKeys.map(key => {
+            let skillName = key.replace(/_/g, ' ')
+                            .replace(/\b\w/g, l => l.toUpperCase())
+                            .replace('Gk ', 'GK ');
+            return { value: key, text: skillName };
+        });
+
+        skillsForDropdown.sort((a, b) => a.text.localeCompare(b.text));
+
+        skillsForDropdown.forEach(skill => {
+            const option = document.createElement('option');
+            option.value = skill.value;
+            option.textContent = skill.text;
+            skillSelect.appendChild(option);
+        });
     }
 
     init();
