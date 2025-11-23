@@ -658,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const normalizedPlayerName = normalizeString(player.player_name);
-            const nameMatch = search.length === 0 || search.split(/[\s,]+/).filter(term => term.length > 0).some(term => normalizedPlayerName.includes(term));
+            const nameMatch = search.length === 0 || search.split(/[\s,]+/).filter(term => term.length > 0).every(term => normalizedPlayerName.includes(term));
             if (!nameMatch) return false;
 
             if (team && player.team_name !== team) return false;
@@ -695,7 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSort.key = null;
             updateSortVisuals();
 
-        } else if (currentSort.key) {
+        } else if (currentSort.key && currentSort.key !== 'overall_rating') {
             filtered.sort((a, b) => {
                 let valA = a[currentSort.key];
                 let valB = b[currentSort.key];
@@ -716,7 +716,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         } else {
-            filtered.sort((a, b) => (b.overall_rating || 0) - (a.overall_rating || 0));
+            if (search && search.length > 0) {
+                filtered.sort((a, b) => {
+                    const nameA = normalizeString(a.player_name);
+                    const nameB = normalizeString(b.player_name);
+                    
+                    if (nameA === search && nameB !== search) return -1;
+                    if (nameB === search && nameA !== search) return 1;
+
+                    const aStarts = nameA.startsWith(search);
+                    const bStarts = nameB.startsWith(search);
+                    
+                    if (aStarts && !bStarts) return -1;
+                    if (!aStarts && bStarts) return 1;
+
+                    return (b.overall_rating || 0) - (a.overall_rating || 0);
+                });
+            } else {
+                filtered.sort((a, b) => (b.overall_rating || 0) - (a.overall_rating || 0));
+            }
             currentSort = { key: 'overall_rating', direction: 'desc' };
             updateSortVisuals();
         }
