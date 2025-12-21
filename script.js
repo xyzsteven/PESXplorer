@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (player[key] == 1) {
                 hasSkills = true;
                 const listItem = document.createElement('li');
-                listItem.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                listItem.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).replace('Gk ', 'GK ');;
                 skillsListContainer.appendChild(listItem);
             }
         });
@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const skillsList1 = document.getElementById('cmpSkillsListContainer1');
         skillsList1.innerHTML = '';
         let hasSkills1 = false;
-        skillKeys.forEach(key => { if (player1[key] == 1) { hasSkills1 = true; skillsList1.innerHTML += `<li>${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`; } });
+        skillKeys.forEach(key => { if (player1[key] == 1) { hasSkills1 = true; skillsList1.innerHTML += `<li>${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).replace('Gk ', 'GK ')}</li>`; } });
         if (!hasSkills1) skillsList1.innerHTML = `<li class="text-gray-500">This player has no special skills.</li>`;
         document.getElementById('cmpModalForm1').textContent = player1.form || 'N/A';
         document.getElementById('cmpModalInjuryResistance1').textContent = player1.injury_resistance || 'N/A';
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const skillsList2 = document.getElementById('cmpSkillsListContainer2');
         skillsList2.innerHTML = '';
         let hasSkills2 = false;
-        skillKeys.forEach(key => { if (player2[key] == 1) { hasSkills2 = true; skillsList2.innerHTML += `<li>${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`; } });
+        skillKeys.forEach(key => { if (player2[key] == 1) { hasSkills2 = true; skillsList2.innerHTML += `<li>${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).replace('Gk ', 'GK ')}</li>`; } });
         if (!hasSkills2) skillsList2.innerHTML = `<li class="text-gray-500">This player has no special skills.</li>`;
         document.getElementById('cmpModalForm2').textContent = player2.form || 'N/A';
         document.getElementById('cmpModalInjuryResistance2').textContent = player2.injury_resistance || 'N/A';
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isDefaultSearch = search === '' && generalPos === '' && specificPos === '' &&
                                 team === '' && country === '' && minOvr === 40 && maxOvr === 99 &&
                                 !height && !weight && !age && !foot && !playingStyle && !playerSkill &&
-                                !form && !injuryResistance && !weakFootUsage && !weakFootAccuracy;
+                                !form && !injuryResistance && !weakFootUsage && !weakFootAccuracy && !sortByAbility;;
 
         let filtered = allPlayers.filter(player => {
             const teamName = player.team_name || 'Free Agent';
@@ -658,7 +658,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const normalizedPlayerName = normalizeString(player.player_name);
-            const nameMatch = search.length === 0 || search.split(/[\s,]+/).filter(term => term.length > 0).every(term => normalizedPlayerName.includes(term));
+            const nameMatch = search.length === 0 || search.split(',').some(group => {
+                const terms = group.trim().split(/\s+/).filter(t => t.length > 0);
+                return terms.length > 0 && terms.every(term => normalizedPlayerName.includes(term));
+            });
             if (!nameMatch) return false;
 
             if (team && player.team_name !== team) return false;
@@ -716,25 +719,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         } else {
-            if (search && search.length > 0) {
-                filtered.sort((a, b) => {
-                    const nameA = normalizeString(a.player_name);
-                    const nameB = normalizeString(b.player_name);
-                    
-                    if (nameA === search && nameB !== search) return -1;
-                    if (nameB === search && nameA !== search) return 1;
-
-                    const aStarts = nameA.startsWith(search);
-                    const bStarts = nameB.startsWith(search);
-                    
-                    if (aStarts && !bStarts) return -1;
-                    if (!aStarts && bStarts) return 1;
-
-                    return (b.overall_rating || 0) - (a.overall_rating || 0);
-                });
-            } else {
-                filtered.sort((a, b) => (b.overall_rating || 0) - (a.overall_rating || 0));
-            }
+            filtered.sort((a, b) => (b.overall_rating || 0) - (a.overall_rating || 0));
             currentSort = { key: 'overall_rating', direction: 'desc' };
             updateSortVisuals();
         }
