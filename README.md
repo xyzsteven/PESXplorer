@@ -1,6 +1,6 @@
 # PESXplorer - PES 2021 Player Database 📊
 
-A fast, client-side desktop web application for searching, filtering, and comparing every player based on **PES 2021 VirtuaRED.com Patch (v10)**. Designed for performance and ease of use, PESXplorer allows users to drill down into the database to find the perfect player using both general criteria and deep attribute analysis.
+A fast, client-side desktop web application for searching, filtering, and comparing every player based on **PES 2021 VirtuaRED.com Patch (v10.1)**. Designed for performance and ease of use, PESXplorer allows users to drill down into the database to find the perfect player using both general criteria and deep attribute analysis.
 
 This project is a 100% static site (HTML, CSS, JS) that runs entirely in the browser.
 
